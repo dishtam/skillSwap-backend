@@ -166,3 +166,197 @@ Email: rohhiiiit@gmail.com
 
 > “The best way to learn is by teaching.”
 
+# 🧠 SkillSwap Prisma Schema Overview
+
+This document explains the data models used in the **SkillSwap** platform, built using **Prisma ORM**.  
+SkillSwap allows users to **teach and learn skills** by connecting with others on the platform.
+
+---
+
+## 🧩 Models and Their Purpose
+
+### 1. 🧑‍💼 `User`
+
+```prisma
+model User {
+  id               String     @id @default(uuid())
+  name             String
+  email            String     @unique
+  password         String
+  bio              String?
+  location         String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  skills           Skill[]    @relation("UserSkills")
+  offeredSkills    Skill[]    @relation("UserOfferedSkills")
+
+  sessionsAsLearner Session[] @relation("Learner")
+  sessionsAsTeacher Session[] @relation("Teacher")
+
+  reviewsGiven     Review[]   @relation("ReviewsGiven")
+  reviewsTaken     Review[]   @relation("ReviewsTaken")
+}
+✅ Purpose:
+Represents a registered user. A user can both offer skills to teach and seek skills to learn.
+
+📌 Key Fields:
+
+skills: Skills the user wants to learn.
+
+offeredSkills: Skills the user is offering to teach.
+
+sessionsAsLearner: Sessions where the user is a learner.
+
+sessionsAsTeacher: Sessions where the user is a teacher.
+
+reviewsGiven / reviewsTaken: Reviews the user gave and received.
+
+2. 🎯 Skill
+prisma
+Copy
+Edit
+model Skill {
+  id           String     @id @default(uuid())
+  name         String
+  description  String?
+  category     String
+  createdAt    DateTime   @default(now())
+
+  users        User[]     @relation("UserSkills")
+  offeredBy    User[]     @relation("UserOfferedSkills")
+  sessions     Session[]
+}
+✅ Purpose:
+Represents a specific skill (e.g., Guitar, Python, Yoga) that can be learned or taught.
+
+📌 Key Fields:
+
+users: Users who want to learn this skill.
+
+offeredBy: Users who can teach this skill.
+
+sessions: Sessions related to this skill.
+
+3. 📅 Session
+prisma
+Copy
+Edit
+model Session {
+  id             String         @id @default(uuid())
+  skillId        String
+  learnerId      String
+  teacherId      String
+  scheduledAt    DateTime
+  durationMins   Int
+  status         SessionStatus  @default(PENDING)
+  createdAt      DateTime       @default(now())
+
+  skill          Skill          @relation(fields: [skillId], references: [id])
+  learner        User           @relation("Learner", fields: [learnerId], references: [id])
+  teacher        User           @relation("Teacher", fields: [teacherId], references: [id])
+  review         Review?
+}
+✅ Purpose:
+Defines a scheduled learning session between a teacher and a learner for a particular skill.
+
+📌 Key Fields:
+
+learner & teacher: Both are users, but in different roles.
+
+skill: The skill being taught.
+
+scheduledAt: Time the session is scheduled for.
+
+durationMins: Session duration in minutes.
+
+status: Status of the session (PENDING, CONFIRMED, etc.).
+
+review: Associated feedback.
+
+4. 🌟 Review
+prisma
+Copy
+Edit
+model Review {
+  id           String   @id @default(uuid())
+  sessionId    String   @unique
+  reviewerId   String
+  revieweeId   String
+  rating       Int      // 1 to 5
+  comment      String?
+  createdAt    DateTime @default(now())
+
+  session      Session  @relation(fields: [sessionId], references: [id])
+  reviewer     User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  reviewee     User     @relation("ReviewsTaken", fields: [revieweeId], references: [id])
+}
+✅ Purpose:
+A review left by one user about another after a session has taken place.
+
+📌 Key Fields:
+
+sessionId: The session being reviewed.
+
+reviewer: User giving the review.
+
+reviewee: User receiving the review.
+
+rating: From 1 to 5.
+
+comment: Optional text feedback.
+
+5. 📊 SessionStatus (Enum)
+prisma
+Copy
+Edit
+enum SessionStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+✅ Purpose:
+Tracks the status of a session.
+
+📌 Enum Values:
+
+PENDING: Request made, not yet accepted.
+
+CONFIRMED: Both users agreed to the session.
+
+COMPLETED: Session completed successfully.
+
+CANCELLED: Session canceled before it occurred.
+
+🔁 Relationships Overview
+Entity	Relationship Description
+User ↔ Skill	Many-to-many (learned skills and offered skills)
+User ↔ Session	One-to-many (as learner or teacher)
+User ↔ Review	One-to-many (given and received reviews)
+Skill ↔ Session	One-to-many (a skill can have multiple sessions)
+Session ↔ Review	One-to-one (a session can have only one review)
+
+🛠 Use Cases Supported by This Schema
+✅ User Registration & Profile Management
+
+✅ Skill Listing, Searching & Categorization
+
+✅ Session Scheduling and Tracking
+
+✅ Role-based Session Participation (Learner/Teacher)
+
+✅ Ratings & Reviews for Users
+
+✅ Status-based Session Workflow
+
+📁 Tech Stack
+🧬 Prisma ORM
+
+🗄️ PostgreSQL / MySQL
+
+☁️ Node.js / TypeScript
+
+🔐 Secure Password Handling
+
+🧪 Scalable Relationship Modeling

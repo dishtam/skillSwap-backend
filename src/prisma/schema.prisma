@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String     @id @default(uuid())
+  name             String
+  email            String     @unique
+  password         String
+  bio              String?
+  location         String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  skills           Skill[]    @relation("UserSkills")
+  offeredSkills    Skill[]    @relation("UserOfferedSkills")
+
+  // Inverse relations for Session
+  sessionsAsLearner Session[] @relation("Learner")
+  sessionsAsTeacher Session[] @relation("Teacher")
+
+  // Inverse relations for Review
+  reviewsGiven     Review[]   @relation("ReviewsGiven")
+  reviewsTaken     Review[]   @relation("ReviewsTaken")
+}
+
+model Skill {
+  id           String     @id @default(uuid())
+  name         String
+  description  String?
+  category     String
+  createdAt    DateTime   @default(now())
+
+  users        User[]     @relation("UserSkills")
+  offeredBy    User[]     @relation("UserOfferedSkills")
+  sessions     Session[]
+}
+
+model Session {
+  id             String         @id @default(uuid())
+  skillId        String
+  learnerId      String
+  teacherId      String
+  scheduledAt    DateTime
+  durationMins   Int
+  status         SessionStatus  @default(PENDING)
+  createdAt      DateTime       @default(now())
+
+  skill          Skill          @relation(fields: [skillId], references: [id])
+  learner        User           @relation("Learner", fields: [learnerId], references: [id])
+  teacher        User           @relation("Teacher", fields: [teacherId], references: [id])
+  review         Review?
+}
+
+model Review {
+  id           String   @id @default(uuid())
+  sessionId    String   @unique
+  reviewerId   String
+  revieweeId   String
+  rating       Int      // 1 to 5
+  comment      String?
+  createdAt    DateTime @default(now())
+
+  session      Session  @relation(fields: [sessionId], references: [id])
+  reviewer     User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  reviewee     User     @relation("ReviewsTaken", fields: [revieweeId], references: [id])
+}
+
+enum SessionStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
