@@ -1,11 +1,19 @@
-const express = require("express");
+import express from "express";
+import cookieParser from "cookie-parser";
+import userRoutes from "./routes/userRoutes";
+import { errorHandler } from "./middlewares/errorHandler";
+
 const app = express();
 
-app.get("/",(req: any,res: any)=>{
-    res.send("Hello, World!");
-});
+// Middleware setup
+app.use(express.json());
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
 
-app.listen(3000, () => {
-    console.log("Server is running on port 3000");
-});
+// Routes setup
+app.use("/api/user/", userRoutes);
 
+// Error handling middleware
+app.use(errorHandler);
+
+export default app;
