@@ -17,3 +17,5 @@ export const validateBody = (schema: ZodSchema) => {
         next();
     };   
 }
+
+
