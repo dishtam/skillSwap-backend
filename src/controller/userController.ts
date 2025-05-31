@@ -115,15 +115,25 @@ export const userLogout = async (req: Request, res: Response) => {
 
 export const userUpdate = async (req: Request, res: Response) => {
   try {
-    const {username} = req.params;
-    const updateData = req.body;
+    const { username } = req.params;
+    const updateData = { ...req.body };
+    
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    }
 
     const updatedUser = await prisma.user.update({
-      where: {username: username},
+      where: { username: username },
       data: updateData,
     });
+    const { password, ...userWithoutPassword } = updatedUser;
 
-    res.status(200).json({message: "User updated successfully", user: updatedUser});
+    res
+      .status(200)
+      .json({
+        message: "User updated successfully",
+        user: userWithoutPassword,
+      });
   } catch (error) {
     console.error("Error updating user:", error);
     res.status(500).json({ error: "Internal server error" });

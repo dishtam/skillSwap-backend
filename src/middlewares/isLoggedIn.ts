@@ -21,7 +21,6 @@ export const isLoggedIn = async (
       userId: string;
     };
     
-    // console.log("Decoded JWT:", decoded);
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },

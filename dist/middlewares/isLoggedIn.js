@@ -15,7 +15,6 @@ const isLoggedIn = async (req, res, next) => {
             return;
         }
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-        console.log("Decoded JWT:", decoded);
         const user = await prisma.user.findUnique({
             where: { id: decoded.userId },
         });

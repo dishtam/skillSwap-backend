@@ -15,8 +15,8 @@ const router = express.Router();
 router.post("/register", validateBody(userSchema), createUser);
 router.get("/:username", isLoggedIn, getProfile);
 router.post("/login", userLogin);
-router.post("/logout", isLoggedIn, userLogout);
-router.patch("/update-user/:username", isLoggedIn, validateBody(userUpdateSchema),userUpdate)
+router.post("/logout/:username", isLoggedIn, userLogout);
+router.put("/update-user/:username", isLoggedIn, validateBody(userUpdateSchema),userUpdate)
 
 
 export default router;
