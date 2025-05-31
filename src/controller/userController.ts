@@ -7,8 +7,8 @@ const prisma = new PrismaClient();
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, bio, location } = req.body;
-    
+    const { username, email, password, bio, location } = req.body;
+
     const existingUser = await prisma.user.findUnique({
       where: { email: email },
     });
@@ -24,7 +24,7 @@ export const createUser = async (req: Request, res: Response) => {
 
     const newUser = await prisma.user.create({
       data: {
-        name,
+        username,
         email,
         password: hashedPassword,
         bio: bio || null,
@@ -52,4 +52,29 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
+export const getProfile = async (req: Request, res: Response) => {
+  try {
+    const username = req.params.username;
+    const user = await prisma.user.findUnique({
+      where: { username: username },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        bio: true,
+        location: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({ error: "Internal server error" }); 
+  }
+};
 

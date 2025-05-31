@@ -3,14 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createUser = void 0;
+exports.getProfile = exports.createUser = void 0;
 const client_1 = require("@prisma/client");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jwt_1 = require("../utils/jwt");
 const prisma = new client_1.PrismaClient();
 const createUser = async (req, res) => {
     try {
-        const { name, email, password, bio, location } = req.body;
+        const { username, email, password, bio, location } = req.body;
         const existingUser = await prisma.user.findUnique({
             where: { email: email },
         });
@@ -23,7 +23,7 @@ const createUser = async (req, res) => {
         const hashedPassword = await bcrypt_1.default.hash(password, 10);
         const newUser = await prisma.user.create({
             data: {
-                name,
+                username,
                 email,
                 password: hashedPassword,
                 bio: bio || null,
@@ -48,3 +48,29 @@ const createUser = async (req, res) => {
     }
 };
 exports.createUser = createUser;
+const getProfile = async (req, res) => {
+    try {
+        const username = req.params.username;
+        const user = await prisma.user.findUnique({
+            where: { username: username },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                bio: true,
+                location: true,
+                createdAt: true,
+            },
+        });
+        if (!user) {
+            res.status(404).json({ error: "User not found" });
+            return;
+        }
+        res.status(200).json({ user });
+    }
+    catch (error) {
+        console.error("Error fetching user profile:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+exports.getProfile = getProfile;

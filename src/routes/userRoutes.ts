@@ -1,10 +1,13 @@
 import express from "express";
-import { createUser } from "../controller/userController";
-import { validateBody } from "./../middlewares/validateBody";
+import { createUser, getProfile } from "../controller/userController";
+import { validateBody } from "../middlewares/userValidator";
+import {isLoggedIn} from "../middlewares/isLoggedIn";
 import { userSchema } from "../validators/userValidator"
 
 const router = express.Router();
 
 router.post("/register", validateBody(userSchema), createUser);
+router.get("/:username", isLoggedIn, getProfile);
+
 
 export default router;
