@@ -78,3 +78,54 @@ export const getProfile = async (req: Request, res: Response) => {
   }
 };
 
+export const userLogin = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email }
+    });
+    if (!existingUser) {
+      res.status(401).json({ error: "Invalid email or password" });
+      return;
+    }
+    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+    if (!isPasswordValid) {
+      res.status(401).json({ error: "Invalid email or password" });
+      return;
+    }
+    const token = generateToken(existingUser.id);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    const { password: _, ...userWithoutPassword } = existingUser;
+    res.status(200).json({ user: userWithoutPassword, message: "Login successful" });
+  } catch (error) {
+    console.error("Error logging in user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const userLogout = async (req: Request, res: Response) => {
+  res.clearCookie("token"); 
+  res.status(200).json({ message: "Logged out successfully" });
+};
+
+export const userUpdate = async (req: Request, res: Response) => {
+  try {
+    const {username} = req.params;
+    const updateData = req.body;
+
+    const updatedUser = await prisma.user.update({
+      where: {username: username},
+      data: updateData,
+    });
+
+    res.status(200).json({message: "User updated successfully", user: updatedUser});
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
